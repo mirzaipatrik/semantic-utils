@@ -8,7 +8,6 @@ fn main() {
     dotenv().ok();
     let hf_token = env::var("HF_TOKEN").expect("HF_TOKEN must be set");
     let embeddings_endpoint = env::var("EMBEDDINGS_ENDPOINT").expect("EMBEDDINGS_ENDPOINT must be set");
-    // let hf_token = "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";
     let http_client = Client::new();
     let mut headers = HeaderMap::new();
     headers.insert(
