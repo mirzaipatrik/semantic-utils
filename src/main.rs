@@ -45,7 +45,6 @@ fn main() {
     });
 
     let datocms: Result<StoriesResponse, Box<dyn Error>> = get_stories(QUERY, variables);
-    println!("{:#?}", datocms);
 
-    chunk_text();
+    chunk_text(datocms);
 }

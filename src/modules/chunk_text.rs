@@ -1,7 +1,8 @@
 pub mod chunking {
-    
-    pub fn chunk_text() {
-        println! {"Hello"}
+    use crate::structs::common::structs::StoriesResponse;
+    use std::error::Error;
+    pub fn chunk_text(strings: Result<StoriesResponse, Box<dyn Error>>) {
+        println!("{:#?}", strings)
     }
     
 }
