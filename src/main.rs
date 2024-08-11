@@ -1,11 +1,14 @@
 mod utils; // Declare the `utils` module
+mod modules;
+mod structs;
 use serde_json::json;
+use structs::common::structs::StoriesResponse;
 use std::error::Error;
 use utils::db_connect::db::upsert_data;
 use utils::db_connect::db::DbProperties;
 use utils::embedding_utils::get_embedding;
 use utils::get_datocms_stories::get_stories;
-use utils::get_datocms_stories::StoriesResponse; // Import serde_json and Value.
+use modules::chunk_text::chunking::chunk_text;
 
 const QUERY: &str = r#"
 query Home($language: SiteLocale, $skip: IntType, $yearStart: Date, $yearEnd: Date) {
@@ -43,4 +46,6 @@ fn main() {
 
     let datocms: Result<StoriesResponse, Box<dyn Error>> = get_stories(QUERY, variables);
     println!("{:#?}", datocms);
+
+    chunk_text();
 }

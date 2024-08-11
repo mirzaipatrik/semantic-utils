@@ -4,42 +4,7 @@ use reqwest::header::{HeaderMap, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use serde_json::{json, Value}; // Import serde_json and Value.
 use std::env;
 use std::error::Error;
-
-use serde::{Deserialize, Serialize};
-
-// Represents the `storyContent` field in a Story.
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct StoryContent {
-    #[serde(rename = "__typename")]
-    typename: String,
-    #[serde(rename = "paragraphText")]
-    paragraph_text: Option<String>,
-}
-
-// Represents a story item.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Story {
-    date: String,
-    #[serde(rename = "storyNumber")]
-    story_number: u32, // Updated to snake_case
-    description: String,
-    #[serde(rename = "storyContent")]
-    story_content: Vec<StoryContent>, // Updated to snake_case
-}
-
-// Represents the `allStories` field in the GraphQL response.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct AllStories {
-    #[serde(rename = "allStories")]
-    all_stories: Vec<Story>, // Updated to snake_case
-}
-
-// Represents the top-level response object containing `data`.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct StoriesResponse {
-    data: AllStories,
-}
+use crate::structs::common::structs::StoriesResponse;
 
 pub fn get_stories(query: &str, variables: Value) -> Result<StoriesResponse, Box<dyn Error>> {
     // Return a Value instead of String.
