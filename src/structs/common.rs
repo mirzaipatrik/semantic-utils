@@ -5,27 +5,27 @@ pub mod structs {
     #[serde(rename_all = "camelCase")]
     pub struct StoryContent {
         #[serde(rename = "__typename")]
-        typename: String,
-        paragraph_text: Option<String>,
+        pub typename: String,
+        pub paragraph_text: Option<String>,
     }
 
     #[derive(Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Story {
-        date: String,
-        story_number: u32, 
-        description: String,
-        story_content: Vec<StoryContent>, 
+        pub date: String,
+        pub story_number: u32, 
+        pub description: String,
+        pub story_content: Vec<StoryContent>, 
     }
 
     #[derive(Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct AllStories {
-        all_stories: Vec<Story>,
+        pub all_stories: Vec<Story>,
     }
 
     #[derive(Debug, Serialize, Deserialize)]
     pub struct StoriesResponse {
-        data: AllStories,
+        pub data: AllStories,
     }
 }
