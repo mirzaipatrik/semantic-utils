@@ -10,3 +10,4 @@ thiserror = "1.0"
 http = "1.0"
 dotenv = "0.15.0"
 serde = { version = "1.0", features = ["derive"] }
+regex = "1"  # or the latest version

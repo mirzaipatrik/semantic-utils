@@ -1,31 +1,52 @@
 pub mod chunking {
+    use crate::structs::common::structs::{Metadata, OutputObject, StoriesResponse, Story};
+    use crate::utils::db_connect::db::upsert_data;
+    use crate::utils::embedding_utils::get_embedding;
+    use regex::Regex;
 
-    use crate::structs::common::structs::{StoriesResponse, Story};
-    use std::error::Error;
-    use std::fs::File;
-    use std::io::Write;
-    pub fn chunk_text(strings: Result<StoriesResponse, Box<dyn Error>>) {
-        match strings {
-            Ok(data) => {
+    pub fn chunk_text(stories: StoriesResponse) -> Vec<OutputObject> {
+        let output_objects: Vec<OutputObject> = Vec::new();
+    
+        let stories: Vec<Story> = stories.data.all_stories;
 
-                let pretty_json = serde_json::to_string_pretty(&data).unwrap();
-                let mut file = File::create("output.json").expect("Unable to create file");
-                file.write_all(pretty_json.as_bytes()).expect("Unable to write data");
-                println!("Output written to output.json");
+        let re = Regex::new(r"[ ]*?\n[ ]*?\n[ ]*").unwrap();
 
-                let stories: Vec<Story> = data.data.all_stories;
-                for story in stories {
-                    // println!("{:?}", story.story_content);
-                    println!("\n\n");
-                    for content in &story.story_content {
-                        if content.typename == "ParagraphRecord" {
-                            println!("hello");
+        for story in stories {
+            for content in &story.story_content {
+                if content.typename == "ParagraphRecord" {
+                    if let Some(paragraph_text) = &content.paragraph_text {
+                        let splitted_text: Vec<&str> = re.split(paragraph_text).collect();
+    
+                        for (i, part) in splitted_text.iter().enumerate() {
+                            match get_embedding(part) {
+                                Ok(embedding_values) => {
+                                    let output_object = OutputObject {
+                                        id: format!("{}-{}", story.story_number, i),
+                                        metadata: Metadata {
+                                            title: story.description.clone(),
+                                            date: story.date.clone(),
+                                            chunked_text: part.to_string(),
+                                            story_number: story.story_number.to_string(),
+                                        },
+                                        values: embedding_values,
+                                    };
+
+                                    println!("{:#?}", output_object);
+                                    upsert_data(output_object);
+                                }
+                                Err(e) => {
+                                    eprintln!("Failed to get embedding for part '{}': {}", part, e);
+                                    continue;
+                                }
+                            }
                         }
+                    } else {
+                        println!("No paragraph text available");
                     }
                 }
-                // println!("{:#?}", data.data.all_stories)
             }
-            Err(e) => eprintln!("Error: {}", e),
         }
+    
+        output_objects // Return the collected OutputObject instances
     }
 }

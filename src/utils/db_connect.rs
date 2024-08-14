@@ -5,21 +5,12 @@ pub mod db {
     use serde_json::json;
     use std::env;
 
-    pub struct DbProperties {
-        pub embedding: Result<Vec<f64>, reqwest::Error>,
-    }
+    use crate::structs::common::structs::OutputObject;
 
-    pub fn upsert_data(props: DbProperties) {
+    pub fn upsert_data(props: OutputObject) {
         dotenv().ok();
-        println!("{:#?}", props.embedding);
+        println!("{:#?}", props.values);
 
-        let embedding: Vec<f64> = match props.embedding {
-            Ok(vec) => vec,
-            Err(e) => {
-                eprintln!("Error retrieving the embedding {}", e);
-                return;
-            }
-        };
 
         let pinecone_api_key: String =
             env::var("PINECONE_API_KEY").expect("PINECONE_API_KEY must be set");
@@ -40,8 +31,9 @@ pub mod db {
         let data = json!({
             "vectors": [
                 {
-                    "id": "vec1",
-                    "values": embedding
+                    "id": props.id,
+                    "values": props.values,
+                    "metadata": props.metadata
                 }
             ]
         });
