@@ -1,61 +1,58 @@
-use reqwest::blocking::Client;
-use reqwest::header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE};
+mod modules;
+mod structs;
+mod utils; // Declare the `utils` module
+use modules::chunk_text::chunking::chunk_text;
 use serde_json::json;
-use dotenv::dotenv;
-use std::env;
+use std::error::Error;
+use structs::common::structs::StoriesResponse;
+use utils::get_datocms_stories::get_stories;
+
+const QUERY: &str = r#"
+query Home($language: SiteLocale, $skip: IntType, $yearStart: Date, $yearEnd: Date) {
+  allStories(locale: $language, first: 20, skip: $skip, filter: {date: {gt: $yearStart, lt: $yearEnd}}, orderBy: date_DESC) {
+    storyNumber
+    date
+    description
+    storyContent {
+      __typename
+      ... on ParagraphRecord {
+        paragraphText
+      }
+    }
+  }
+}
+"#;
 
 fn main() {
-    dotenv().ok();
-    let hf_token = env::var("HF_TOKEN").expect("HF_TOKEN must be set");
-    let embeddings_endpoint = env::var("EMBEDDINGS_ENDPOINT").expect("EMBEDDINGS_ENDPOINT must be set");
-    let http_client = Client::new();
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        AUTHORIZATION,
-        format!("Bearer {}", hf_token).parse().unwrap(),
-    );
-    headers.insert(CONTENT_TYPE, format!("application/json").parse().unwrap());
-    let data = json!({
-        "inputs": "hello"
+    let mut skip: i32 = 0;
+
+    loop {
+        let variables = json!({
+            "language": "en",
+            "skip": skip,
+            "yearStart": "2018-01-01",
+            "yearEnd": "2022-12-31"
+        });
+
+        let datocms_response: Result<StoriesResponse, Box<dyn Error>> =
+            get_stories(QUERY, variables);
+
+        match datocms_response {
+            Ok(res) => {
+                println!("Skip: {}", skip);
+                println!("Data received length: {}", res.data.all_stories.len());
+
+                let res_clone = res.clone();
+                chunk_text(res_clone);
+
+                if res.data.all_stories.len() < 20 {
+                    break;
+                } else {
+                    skip += 20;
+                }
+            }
+
+            Err(e) => eprintln!("Error: {}", e),
         }
-    );
-
-    let http_result = http_client
-        .post(embeddings_endpoint)
-        .headers(headers)
-        .body(data.to_string())
-        .send();
-
-    if http_result.is_ok() {
-        println!("{:#?}", http_result.ok().unwrap().text())
-    } else {
-        println!("not working")
     }
 }
-
-// async function query(data) {
-// 	const response = await fetch(
-// 		"https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2",
-// 		{
-// 			headers: {
-// 				Authorization: "Bearer hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-// 				"Content-Type": "application/json",
-// 			},
-// 			method: "POST",
-// 			body: JSON.stringify(data),
-// 		}
-// 	);
-// 	const result = await response.json();
-// 	return result;
-// }
-
-// query({"inputs": {
-// 	"source_sentence": "That is a happy person",
-// 	"sentences": [
-// 		"That is a happy dog",
-// 		"That is a very happy person",
-// 		"Today is a sunny day"
-// 	]
-// }}).then((response) => {
-// 	console.log(JSON.stringify(response));
-// });
