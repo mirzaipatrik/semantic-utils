@@ -31,7 +31,7 @@ fn main() {
             "language": "en",
             "skip": skip,
             "yearStart": "2018-01-01",
-            "yearEnd": "2022-12-31"
+            "yearEnd": "2024-08-14"
         });
 
         let datocms_response: Result<StoriesResponse, Box<dyn Error>> =

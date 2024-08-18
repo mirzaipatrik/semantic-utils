@@ -12,6 +12,28 @@ pub mod chunking {
         let re = Regex::new(r"[ ]*?\n[ ]*?\n[ ]*").unwrap();
 
         for story in stories {
+            
+            // Upsert title
+            match get_embedding(&story.description) {
+                Ok(embedding) => {
+                    let title_object = OutputObject {
+                        id: format!("{}-{}", story.story_number, 999),
+                        metadata: Metadata {
+                            title: story.description.clone(),
+                            date: story.date.clone(),
+                            chunked_text: story.description.clone(),
+                            story_number: story.story_number.to_string(),
+                        },
+                        values: embedding,
+                    };
+                    upsert_data(title_object);
+                }
+                Err(e) => {
+                    eprintln!("Failed to get embedding for description '{}': {}", &story.description, e);
+                    continue;
+                }
+            }
+
             for content in &story.story_content {
                 if content.typename == "ParagraphRecord" {
                     if let Some(paragraph_text) = &content.paragraph_text {
